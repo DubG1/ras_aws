@@ -31,6 +31,6 @@ def handleImages(json_input):
             result.append(img)
 
     res = {
-        "imgWithSlotsArr": result
+        "imgWithSlots": result
     }
     return res
