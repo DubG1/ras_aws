@@ -20,7 +20,7 @@ def identify_slots(img_name, bucket_name):
 
     for label in labels:
         if label['Name'] == 'Parking Slot' and label['Confidence'] > 60:  # Slot detected
-            return True
+            return True # img has slot and will be added to result array
 
     return False
 

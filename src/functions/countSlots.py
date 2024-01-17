@@ -1,7 +1,11 @@
 import boto3
 import json
 
-def count_slots(img_name, bucket_name):
+def is_within_boundary(box, width_boundary, length_boundary):
+    # Check if the box width and height are within the specified boundaries
+    return 0 <= box['Width'] <= width_boundary and 0 <= box['Height'] <= length_boundary
+
+def count_slots(img_name, bucket_name, width_boundary, length_boundary):
     # Initialize Rekognition client
     rekognition_client = boto3.client('rekognition')
     
@@ -20,7 +24,8 @@ def count_slots(img_name, bucket_name):
 
     for label in labels:
         if label['Name'] == 'Parking Slot' and label['Confidence'] > 60:  # Slot detected
-            slot_count += 1
+            if is_within_boundary(label['Geometry']['BoundingBox'], width_boundary, length_boundary):
+                slot_count += 1
 
     return slot_count
 
@@ -33,9 +38,8 @@ def lambda_handler(event, context):
     result = {}
 
     for img in img_arr:
-        slot_count = count_slots(img, bucket_name)
-        ###car_count = imgArr[img]
-        result[img] = slot_count ### - car_count not relevant anymore
+        slot_count = count_slots(img, bucket_name,  width_boundary=0.5, length_boundary=0.5) # set car dimensions
+        result[img] = slot_count
 
 
     response = {
