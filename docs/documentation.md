@@ -2,9 +2,9 @@
 
 In identifySlots we loop trhough all images that include a parking lot and see if there are any parkingslots in the image and put the image into the result array.
 identify_slots:
-    - Takes an image name and bucket name as input
     - Uses Rekognition to detect custom labels (parking slots) in the image
-    - Returns a boolean indicating whether parking slots are present in the image
+    - function returns a boolean indicating whether parking slots are present in the image or not
+    - json object consists of a lsit of images that have parking slots
 
 In filterSlots we count how many cars are detected and add it to the result dict with the image and its number of cars (maybe rename it to count cars)
 count_cars:

@@ -18,7 +18,7 @@ def count_cars(img_name, bucket_name):
 
     return car_count
 
-def handleImages(json_input):
+def lambda_handler(json_input):
     imgArr = json_input["imageArr"]
     bucket_name = 'roadanalysis1'
     result = {}
