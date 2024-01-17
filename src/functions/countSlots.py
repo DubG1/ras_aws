@@ -2,8 +2,9 @@ import boto3
 import json
 
 def is_within_boundary(box, width_boundary, length_boundary):
+    margin = (width_boundary + length_boundary) / 2 * 0.3 # Margin of error for box width and height
     # Check if the box width and height are within the specified boundaries
-    return 0 <= box['Width'] <= width_boundary and 0 <= box['Height'] <= length_boundary
+    return (width_boundary - margin) <= box['Width'] <= (width_boundary + margin) and (length_boundary - margin) <= box['Height'] <= (length_boundary + margin)
 
 def count_slots(img_name, bucket_name, width_boundary, length_boundary):
     # Initialize Rekognition client
@@ -29,6 +30,13 @@ def count_slots(img_name, bucket_name, width_boundary, length_boundary):
 
     return slot_count
 
+def get_boundaries(img_name):
+    parts = img_name.split('.')[0].split('_')   # split filename by . to remove extension, then split by _ to get width and length
+    if len(parts) == 2:
+        width = float(parts[0])
+        length = float(parts[1])
+    return width, length
+
 def lambda_handler(event, context):
     # Extract input from the event
     json_input = json.loads(event['body'])
@@ -38,7 +46,8 @@ def lambda_handler(event, context):
     result = {}
 
     for img in img_arr:
-        slot_count = count_slots(img, bucket_name,  width_boundary=0.5, length_boundary=0.5) # set car dimensions
+        width_boundary, length_boundary = get_boundaries(img)
+        slot_count = count_slots(img, bucket_name,  width_boundary, length_boundary) # set slot dimensions
         result[img] = slot_count
 
 
