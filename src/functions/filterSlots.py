@@ -1,33 +1,28 @@
 import boto3
 
-def count_cars(img_name, bucket_name):
-    #init rekognition
-    rekognition_client = boto3.client('rekognition')
-    s3_object = {'S3Object': {'Bucket': bucket_name, 'Name': img_name}}
-    
-    #detect labels
-    response = rekognition_client.detect_labels(Image=s3_object)
+def is_within_boundary(box, width_boundary, length_boundary):
+    margin = (width_boundary + length_boundary) / 2 * 0.3 # Margin of error for box width and height
+    # Check if the box width and height are within the specified boundaries
+    return (width_boundary - margin) <= box[2] <= (width_boundary + margin) and (length_boundary - margin) <= box[3] <= (length_boundary + margin)
 
-    #count how often car was the label
-    car_count = 0
-    labels = response.get('Labels', [])
+def get_boundaries(image):
+    parts = image.split('.')[0].split('_')   # split filename by . to remove extension, then split by _ to get width and length
+    if len(parts) == 2:
+        width = float(parts[0])
+        length = float(parts[1])
+    return width, length
 
-    for label in labels:
-        if label['Name'] == 'Car' and label['Confidence'] > 80: #car detected
-            car_count += 1
+def lambda_handler(event, context):
+    image = event['parkingSlots']
+    image_name = image.pop()
+    width_boundary, length_boundary = get_boundaries(image_name)
 
-    return car_count
+    for box in image:
+        if not is_within_boundary(box, width_boundary, length_boundary):
+            image.remove(box)
 
-def lambda_handler(json_input):
-    imgArr = json_input["imageArr"]
-    bucket_name = 'roadanalysis1'
-    result = {}
-    
-    for img in imgArr:
-        car_count = count_cars(img, bucket_name)
-        result[img] = car_count
+    image.append(image_name)
 
-    res = {
-        "carCountDict": result
+    return {
+        'validSlots': image
     }
-    return res
