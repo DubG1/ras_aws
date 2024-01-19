@@ -1,4 +1,11 @@
 import boto3
+import io
+from PIL import Image, ImageDraw, ExifTags, ImageColor, ImageFont
+
+''' Note
+my aws acc is deactivated because i exceeded the spending limit so i will have to train a new model as soon as i have a new acc
+this code is based on the old model so it doesnt work anymore but it will basically stay the same except the model and project arn's
+'''
 
 detected_boxes = []
 
@@ -46,9 +53,6 @@ def startingModel():
 #Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #PDX-License-Identifier: MIT-0 (For details, see https://github.com/awsdocs/amazon-rekognition-custom-labels-developer-guide/blob/master/LICENSE-SAMPLECODE.)
 
-import boto3
-import io
-from PIL import Image, ImageDraw, ExifTags, ImageColor, ImageFont
 
 def display_image(bucket,photo,response):
     # Load image from S3 bucket
