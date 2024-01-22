@@ -1,4 +1,6 @@
 import boto3
+import json
+import redis
 
 def is_within_boundary(box, width_boundary, length_boundary):
     margin = (width_boundary + length_boundary) / 2 * 0.3 # Margin of error for box width and height
@@ -22,6 +24,9 @@ def lambda_handler(event, context):
             image.remove(box)
 
     image.append(image_name)
+
+    r = redis.Redis(host='ec2-18-234-121-36.compute-1.amazonaws.com', port=6379, decode_responses=True)
+    r.set('validSlots', json.dumps(image))
 
     return {
         'validSlots': image

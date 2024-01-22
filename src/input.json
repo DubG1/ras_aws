@@ -1,0 +1,10 @@
+{
+    "trafficProjectArn": "arn:aws:rekognition:us-east-1:018843574200:project/trainroad2/1705052885803",
+    "trafficModelArn": "arn:aws:rekognition:us-east-1:018843574200:project/trainroad2/version/trainroad2.2024-01-16T20.52.36/1705434758406",
+    "trafficVersionName": "trainroad2.2024-01-16T20.52.36",
+    "parkingProjectArn": "arn:aws:rekognition:us-east-1:022778135666:project/aws_pslot/1705403384779",
+    "parkingModelArn": "arn:aws:rekognition:us-east-1:022778135666:project/aws_pslot/version/aws_pslot.2024-01-16T12.17.29/1705403849659",
+    "parkingVersionName": "aws_pslot.2024-01-16T12.17.29",
+    "bucketName": "roadanalysis"
+  }
+  
