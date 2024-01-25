@@ -11,7 +11,7 @@ def lambda_handler(event, context):
     
     image_filenames = [obj['Key'] for obj in response.get('Contents', [])]
 
-    r = redis.Redis(host='ec2-18-234-121-36.compute-1.amazonaws.com', port=6379, decode_responses=True)
+    r = redis.Redis(host='', port=6379, decode_responses=True)
 
     r.set('images', json.dumps(image_filenames))
     

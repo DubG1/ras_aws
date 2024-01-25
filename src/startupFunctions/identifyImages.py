@@ -35,7 +35,7 @@ def lambda_handler(event, context):
             identified_traffic_jam_images.append([img, event['trafficProjectArn'], event['trafficModelArn'], event['trafficVersionName'], event['bucketName']])
 
     
-    r = redis.Redis(host='ec2-18-234-121-36.compute-1.amazonaws.com', port=6379, decode_responses=True)
+    r = redis.Redis(host='', port=6379, decode_responses=True)
     r.set('identifiedImages', json.dumps([identified_parking_lot_images, identified_traffic_jam_images]))
     
     

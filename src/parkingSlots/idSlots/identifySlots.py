@@ -28,7 +28,7 @@ def lambda_handler(event, context):
 
     detected_boxes.append(image)
 
-    r = redis.Redis(host='ec2-18-234-121-36.compute-1.amazonaws.com', port=6379, decode_responses=True)
+    r = redis.Redis(host='', port=6379, decode_responses=True)
     r.set('parkingSlots', json.dumps(detected_boxes))
     
 
@@ -60,10 +60,10 @@ def start_model(project_arn, model_arn, version_name, min_inference_units):
     print('Done...')
     
 def startingModel():
-    project_arn='arn:aws:rekognition:us-east-1:022778135666:project/aws_pslot/1705403384779'
-    model_arn='arn:aws:rekognition:us-east-1:022778135666:project/aws_pslot/version/aws_pslot.2024-01-16T12.17.29/1705403849659'
+    project_arn=''
+    model_arn=''
     min_inference_units=1 
-    version_name='aws_pslot.2024-01-16T12.17.29'
+    version_name=''
     start_model(project_arn, model_arn, version_name, min_inference_units)
 
 #Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -97,7 +97,7 @@ def display_image(bucket,photo,response):
             height = imgHeight * box['Height']
             detected_boxes.append([left, top, width, height])
 
-            fnt = ImageFont.truetype('C:/Users/georg/OneDrive/Dokumente/Studium_Windows/dist_sys/project/ras_aws/docs/Arial.ttf', 50)
+            fnt = ImageFont.truetype('../..//docs/Arial.ttf', 50)
             draw.text((left,top), customLabel['Name'], fill='#00d400', font=fnt)
 
             print('Left: ' + '{0:.0f}'.format(left))

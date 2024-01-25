@@ -25,7 +25,7 @@ def lambda_handler(event, context):
 
     image.append(image_name)
 
-    r = redis.Redis(host='ec2-18-234-121-36.compute-1.amazonaws.com', port=6379, decode_responses=True)
+    r = redis.Redis(host='', port=6379, decode_responses=True)
     r.set('validSlots', json.dumps(image))
 
     return {
