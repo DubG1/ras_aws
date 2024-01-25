@@ -1,6 +1,9 @@
 import boto3
 import io
+import time
 from PIL import Image, ImageDraw, ExifTags, ImageColor, ImageFont
+import redis
+import json
 
 ''' Note
 my aws acc is deactivated because i exceeded the spending limit so i will have to train a new model as soon as i have a new acc
@@ -10,12 +13,25 @@ this code is based on the old model so it doesnt work anymore but it will basica
 detected_boxes = []
 
 def lambda_handler(event, context):
-    image = event
-    model_arn = 'arn:aws:rekognition:us-east-1:022778135666:project/aws_pslot/version/aws_pslot.2024-01-16T12.17.29/1705403849659'
-    startingModel()
-    analyzeImage(image, model_arn)
-    stopModel()
+    image = event[0]
+    project_arn=event[1]
+    model_arn=event[2]
+    min_inference_units=1 
+    version_name=event[3]
+    bucket_name=event[4]
+
+    startingModel(project_arn, model_arn, min_inference_units, version_name)
+
+    analyzeImage(image, model_arn, bucket_name)
+
+    stopModel(model_arn)
+
     detected_boxes.append(image)
+
+    r = redis.Redis(host='ec2-18-234-121-36.compute-1.amazonaws.com', port=6379, decode_responses=True)
+    r.set('parkingSlots', json.dumps(detected_boxes))
+    
+
     return {
         'parkingSlots': detected_boxes
     }
@@ -112,11 +128,11 @@ def show_custom_labels(model,bucket,photo, min_confidence):
 
     return len(response['CustomLabels'])
 
-def analyzeImage(image, model_arn):
+def analyzeImage(image, model_arn, bucket_name):
 
-    bucket='roadanalysis1'
-    photo='image'
-    model='model_arn'
+    bucket=bucket_name
+    photo=image
+    model=model_arn
     min_confidence=20
 
     label_count=show_custom_labels(model,bucket,photo, min_confidence)
@@ -125,8 +141,6 @@ def analyzeImage(image, model_arn):
 #Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #PDX-License-Identifier: MIT-0 (For details, see https://github.com/awsdocs/amazon-rekognition-custom-labels-developer-guide/blob/master/LICENSE-SAMPLECODE.)
 
-import boto3
-import time
 
 
 def stop_model(model_arn):
@@ -145,7 +159,7 @@ def stop_model(model_arn):
 
     print('Done...')
     
-def stopModel():
+def stopModel(model_arn):
     
-    model_arn='arn:aws:rekognition:us-east-1:022778135666:project/aws_pslot/version/aws_pslot.2024-01-16T12.17.29/1705403849659'
+    model_arn=model_arn
     stop_model(model_arn)
