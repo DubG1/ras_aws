@@ -10,46 +10,30 @@ my aws acc is deactivated because i exceeded the spending limit so i will have t
 this code is based on the old model so it doesnt work anymore but it will basically stay the same except the model and project arn's
 '''
 
-all_detected_boxes = []
+detected_boxes = []
 
 def lambda_handler(event, context):
-    my_input = event['identifiedImages'][0]
-
-    ec2Instance = my_input[0][0]
-    project_arn=my_input[0][2]
-    model_arn=my_input[0][3]
+    image = event[0]
+    project_arn=event[1]
+    model_arn=event[2]
     min_inference_units=1 
-    version_name=my_input[0][4]
-    bucket_name=my_input[0][5]
+    version_name=event[3]
+    bucket_name=event[4]
 
-    # startingModel(project_arn, model_arn, min_inference_units, version_name)
+    startingModel(project_arn, model_arn, min_inference_units, version_name)
 
-    allready_seen = []
+    analyzeImage(image, model_arn, bucket_name)
 
-    for image in my_input:
-        detected_boxes = []
+    stopModel(model_arn)
 
-        if image[1] in allready_seen:
-            continue
+    detected_boxes.append(image)
 
-        allready_seen.append(image[1])
-        analyzeImage(image[1], model_arn, bucket_name, detected_boxes)
-        
-        detected_boxes.append(image[1])
-        all_detected_boxes.append(detected_boxes)
+    r = redis.Redis(host='ec2-18-234-121-36.compute-1.amazonaws.com', port=6379, decode_responses=True)
+    r.set('parkingSlots', json.dumps(detected_boxes))
     
 
-
-
-    # stopModel(model_arn)
-
-    r = redis.Redis(host=ec2Instance, port=6379, db=0, password='two', decode_responses=True)
-    r.set('parkingSlots', json.dumps(all_detected_boxes))
-    all_detected_boxes.append(ec2Instance)
-    
-    
     return {
-        'parkingSlots': all_detected_boxes
+        'parkingSlots': detected_boxes
     }
 
 def start_model(project_arn, model_arn, version_name, min_inference_units):
@@ -75,18 +59,18 @@ def start_model(project_arn, model_arn, version_name, min_inference_units):
         
     print('Done...')
     
-def startingModel(project_arn, model_arn, min_inference_units, version_name):
-    project_arn=project_arn
-    model_arn=model_arn
-    min_inference_units=min_inference_units
-    version_name=version_name
+def startingModel():
+    project_arn='arn:aws:rekognition:us-east-1:022778135666:project/aws_pslot/1705403384779'
+    model_arn='arn:aws:rekognition:us-east-1:022778135666:project/aws_pslot/version/aws_pslot.2024-01-16T12.17.29/1705403849659'
+    min_inference_units=1 
+    version_name='aws_pslot.2024-01-16T12.17.29'
     start_model(project_arn, model_arn, version_name, min_inference_units)
 
 #Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #PDX-License-Identifier: MIT-0 (For details, see https://github.com/awsdocs/amazon-rekognition-custom-labels-developer-guide/blob/master/LICENSE-SAMPLECODE.)
 
 
-def display_image(bucket,photo,response, detected_boxes):
+def display_image(bucket,photo,response):
     # Load image from S3 bucket
     s3_connection = boto3.resource('s3')
 
@@ -113,25 +97,25 @@ def display_image(bucket,photo,response, detected_boxes):
             height = imgHeight * box['Height']
             detected_boxes.append([left, top, width, height])
 
-            # fnt = ImageFont.truetype('C:/Users/georg/OneDrive/Dokumente/Studium_Windows/dist_sys/project/ras_aws/docs/Arial.ttf', 50)
-            # draw.text((left,top), customLabel['Name'], fill='#00d400', font=fnt)
+            fnt = ImageFont.truetype('C:/Users/georg/OneDrive/Dokumente/Studium_Windows/dist_sys/project/ras_aws/docs/Arial.ttf', 50)
+            draw.text((left,top), customLabel['Name'], fill='#00d400', font=fnt)
 
             print('Left: ' + '{0:.0f}'.format(left))
             print('Top: ' + '{0:.0f}'.format(top))
             print('Label Width: ' + "{0:.0f}".format(width))
             print('Label Height: ' + "{0:.0f}".format(height))
 
-            # points = (
-            #     (left,top),
-            #     (left + width, top),
-            #     (left + width, top + height),
-            #     (left , top + height),
-            #     (left, top))
-            # draw.line(points, fill='#00d400', width=5)
+            points = (
+                (left,top),
+                (left + width, top),
+                (left + width, top + height),
+                (left , top + height),
+                (left, top))
+            draw.line(points, fill='#00d400', width=5)
 
-    # image.show()
+    image.show()
 
-def show_custom_labels(model,bucket,photo, min_confidence, detected_boxes):
+def show_custom_labels(model,bucket,photo, min_confidence):
     client=boto3.client('rekognition')
 
     #Call DetectCustomLabels
@@ -140,18 +124,18 @@ def show_custom_labels(model,bucket,photo, min_confidence, detected_boxes):
         ProjectVersionArn=model)
 
     # For object detection use case, uncomment below code to display image.
-    display_image(bucket,photo,response, detected_boxes)
+    display_image(bucket,photo,response)
 
     return len(response['CustomLabels'])
 
-def analyzeImage(image, model_arn, bucket_name, detected_boxes):
+def analyzeImage(image, model_arn, bucket_name):
 
     bucket=bucket_name
     photo=image
     model=model_arn
     min_confidence=20
 
-    label_count=show_custom_labels(model,bucket,photo, min_confidence, detected_boxes)
+    label_count=show_custom_labels(model,bucket,photo, min_confidence)
     print("Custom labels detected: " + str(label_count))
 
 #Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
