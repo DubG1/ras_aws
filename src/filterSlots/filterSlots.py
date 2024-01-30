@@ -15,19 +15,25 @@ def get_boundaries(image):
     return width, length
 
 def lambda_handler(event, context):
-    image = event['parkingSlots']
-    image_name = image.pop()
-    width_boundary, length_boundary = get_boundaries(image_name)
+    images = event['parkingSlots']
+    ec2Instance = images.pop()
 
-    for box in image:
-        if not is_within_boundary(box, width_boundary, length_boundary):
-            image.remove(box)
+    for image in images:
+        if isinstance(image, str):
+            continue        
+        image_name = image.pop()
+        width_boundary, length_boundary = get_boundaries(image_name)
 
-    image.append(image_name)
+        for box in image:
+            if not is_within_boundary(box, width_boundary, length_boundary):
+                image.remove(box)
+        image.append(image_name)
 
-    r = redis.Redis(host='ec2-18-234-121-36.compute-1.amazonaws.com', port=6379, decode_responses=True)
-    r.set('validSlots', json.dumps(image))
+    r = redis.Redis(host=ec2Instance, port=6379, db=0, password='two', decode_responses=True)
+    r.set('validSlots', json.dumps(images))
+
+    images.append(ec2Instance)
 
     return {
-        'validSlots': image
+        'validSlots': images
     }

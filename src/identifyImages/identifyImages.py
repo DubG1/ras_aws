@@ -30,12 +30,12 @@ def lambda_handler(event, context):
         is_parking_area = any(label['Name'] == 'Parking Lot' for label in response['Labels'])
         
         if is_parking_area:
-            identified_parking_lot_images.append([img, event['parkingProjectArn'], event['parkingModelArn'], event['parkingVersionName'], event['bucketName']])
+            identified_parking_lot_images.append([event['ec2Instance'], img, event['parkingProjectArn'], event['parkingModelArn'], event['parkingVersionName'], event['bucketName']])
         elif is_traffic_jam:
-            identified_traffic_jam_images.append([img, event['trafficProjectArn'], event['trafficModelArn'], event['trafficVersionName'], event['bucketName']])
+            identified_traffic_jam_images.append([event['ec2Instance'], img, event['trafficProjectArn'], event['trafficModelArn'], event['trafficVersionName'], event['bucketName']])
 
     
-    r = redis.Redis(host='ec2-18-234-121-36.compute-1.amazonaws.com', port=6379, decode_responses=True)
+    r = redis.Redis(host=event['ec2Instance'], port=6379, db=0, password='two', decode_responses=True)
     r.set('identifiedImages', json.dumps([identified_parking_lot_images, identified_traffic_jam_images]))
     
     

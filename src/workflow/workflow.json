@@ -1,249 +1,267 @@
 {
-    "Comment": "A description of my state machine",
-    "StartAt": "loadImages",
-    "States": {
-      "loadImages": {
-        "Type": "Task",
-        "Resource": "arn:aws:states:::lambda:invoke",
-        "OutputPath": "$.Payload",
-        "Parameters": {
-          "Payload.$": "$",
-          "FunctionName": "arn:aws:lambda:us-east-1:018843574200:function:loadImages:$LATEST"
-        },
-        "Retry": [
-          {
-            "ErrorEquals": [
-              "Lambda.ServiceException",
-              "Lambda.AWSLambdaException",
-              "Lambda.SdkClientException",
-              "Lambda.TooManyRequestsException"
-            ],
-            "IntervalSeconds": 1,
-            "MaxAttempts": 3,
-            "BackoffRate": 2
-          }
-        ],
-        "Next": "identifyImages"
+  "Comment": "A description of my state machine",
+  "StartAt": "loadImages",
+  "States": {
+    "loadImages": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:us-east-1:381492173799:function:loadImages:$LATEST"
       },
-      "identifyImages": {
-        "Type": "Task",
-        "Resource": "arn:aws:states:::lambda:invoke",
-        "OutputPath": "$.Payload",
-        "Parameters": {
-          "Payload.$": "$",
-          "FunctionName": "arn:aws:lambda:us-east-1:018843574200:function:identifyImages:$LATEST"
-        },
-        "Retry": [
-          {
-            "ErrorEquals": [
-              "Lambda.ServiceException",
-              "Lambda.AWSLambdaException",
-              "Lambda.SdkClientException",
-              "Lambda.TooManyRequestsException"
-            ],
-            "IntervalSeconds": 1,
-            "MaxAttempts": 3,
-            "BackoffRate": 2
-          }
-        ],
-        "Next": "Parallel"
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "identifyImages"
+    },
+    "identifyImages": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:us-east-1:381492173799:function:identifyImages:$LATEST"
       },
-      "Parallel": {
-        "Type": "Parallel",
-        "Branches": [
-          {
-            "StartAt": "MapIdentifySlots",
-            "States": {
-              "MapIdentifySlots": {
-                "Type": "Map",
-                "InputPath": "$",
-                "ItemsPath": "$.identifiedImages[0]",
-                "ResultPath": "$.parkingSlotsArray",
-                "Iterator": {
-                  "StartAt": "identifySlots",
-                  "States": {
-                    "identifySlots": {
-                      "Type": "Task",
-                      "Resource": "arn:aws:lambda:us-east-1:018843574200:function:identifySlots:$LATEST",
-                      "End": true
-                    }
-                  }
-                },
-                "Next": "MapFilterSlots"
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Parallel"
+    },
+    "Parallel": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "identifySlots",
+          "States": {
+            "identifySlots": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:us-east-1:381492173799:function:identifySlots:$LATEST"
               },
-              "MapFilterSlots": {
-                "Type": "Map",
-                "InputPath": "$",
-                "ItemsPath": "$.parkingSlotsArray",
-                "ResultPath": "$.validSlotsArray",
-                "Iterator": {
-                  "StartAt": "filterSlots",
-                  "States": {
-                    "filterSlots": {
-                      "Type": "Task",
-                      "Resource": "arn:aws:lambda:us-east-1:018843574200:function:filterSlots:$LATEST",
-                      "End": true
-                    }
-                  }
-                },
-                "Next": "MapCountSlots"
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "filterSlots"
+            },
+            "filterSlots": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:us-east-1:381492173799:function:filterSlots:$LATEST"
               },
-              "MapCountSlots": {
-                "Type": "Map",
-                "InputPath": "$",
-                "ItemsPath": "$.validSlotsArray",
-                "ResultPath": "$.imageWithValidSlotsArray",
-                "Iterator": {
-                  "StartAt": "countSlots",
-                  "States": {
-                    "countSlots": {
-                      "Type": "Task",
-                      "Resource": "arn:aws:lambda:us-east-1:018843574200:function:countSlots:$LATEST",
-                      "End": true
-                    }
-                  }
-                },
-                "End": true
-              }
-            }
-          },
-          {
-            "StartAt": "MapCustomRoadDetection",
-            "States": {
-              "MapCustomRoadDetection": {
-                "Type": "Map",
-                "InputPath": "$",
-                "ItemsPath": "$.identifiedImages[1]",
-                "ResultPath": "$.roadsWithArea",
-                "Iterator": {
-                  "StartAt": "customRoadDetection",
-                  "States": {
-                    "customRoadDetection": {
-                      "Type": "Task",
-                      "Resource": "arn:aws:lambda:us-east-1:018843574200:function:customRoadDetection:$LATEST",
-                      "End": true
-                    }
-                  }
-                },
-                "Next": "identifyTrafficJams"
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "countSlots"
+            },
+            "countSlots": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:us-east-1:381492173799:function:countSlots:$LATEST"
               },
-              "identifyTrafficJams": {
-                "Type": "Task",
-                "Resource": "arn:aws:states:::lambda:invoke",
-                "OutputPath": "$.Payload",
-                "Parameters": {
-                  "Payload.$": "$",
-                  "FunctionName": "arn:aws:lambda:us-east-1:018843574200:function:identifyTrafficJams:$LATEST"
-                },
-                "Retry": [
-                  {
-                    "ErrorEquals": [
-                      "Lambda.ServiceException",
-                      "Lambda.AWSLambdaException",
-                      "Lambda.SdkClientException",
-                      "Lambda.TooManyRequestsException"
-                    ],
-                    "IntervalSeconds": 1,
-                    "MaxAttempts": 3,
-                    "BackoffRate": 2
-                  }
-                ],
-                "Next": "MapDetectSeverity"
-              },
-              "MapDetectSeverity": {
-                "Type": "Map",
-                "InputPath": "$",
-                "ItemsPath": "$.trafficJamImages",
-                "ResultPath": "$.detectedSeveretyImages",
-                "Iterator": {
-                  "StartAt": "detectSeverity",
-                  "States": {
-                    "detectSeverity": {
-                      "Type": "Task",
-                      "Resource": "arn:aws:lambda:us-east-1:018843574200:function:detectSeverity:$LATEST",
-                      "End": true
-                    }
-                  }
-                },
-                "Next": "splitData"
-              },
-              "splitData": {
-                "Type": "Task",
-                "Resource": "arn:aws:states:::lambda:invoke",
-                "OutputPath": "$.Payload",
-                "Parameters": {
-                  "Payload.$": "$",
-                  "FunctionName": "arn:aws:lambda:us-east-1:018843574200:function:splitData:$LATEST"
-                },
-                "Retry": [
-                  {
-                    "ErrorEquals": [
-                      "Lambda.ServiceException",
-                      "Lambda.AWSLambdaException",
-                      "Lambda.SdkClientException",
-                      "Lambda.TooManyRequestsException"
-                    ],
-                    "IntervalSeconds": 1,
-                    "MaxAttempts": 3,
-                    "BackoffRate": 2
-                  }
-                ],
-                "End": true
-              }
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
             }
           }
-        ],
-        "Next": "saveTrafficValues"
-      },
-      "saveTrafficValues": {
-        "Type": "Task",
-        "Resource": "arn:aws:states:::lambda:invoke",
-        "OutputPath": "$.Payload",
-        "Parameters": {
-          "Payload.$": "$",
-          "FunctionName": "arn:aws:lambda:us-east-1:018843574200:function:saveTrafficValues:$LATEST"
         },
-        "Retry": [
-          {
-            "ErrorEquals": [
-              "Lambda.ServiceException",
-              "Lambda.AWSLambdaException",
-              "Lambda.SdkClientException",
-              "Lambda.TooManyRequestsException"
-            ],
-            "IntervalSeconds": 1,
-            "MaxAttempts": 3,
-            "BackoffRate": 2
+        {
+          "StartAt": "MapCustomRoadDetection",
+          "States": {
+            "MapCustomRoadDetection": {
+              "Type": "Map",
+              "InputPath": "$",
+              "ItemsPath": "$.identifiedImages[1]",
+              "ResultPath": "$.roadsWithArea",
+              "Iterator": {
+                "StartAt": "customRoadDetection",
+                "States": {
+                  "customRoadDetection": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:lambda:us-east-1:381492173799:function:customRoadDetection:$LATEST",
+                    "End": true
+                  }
+                }
+              },
+              "Next": "identifyTrafficJams",
+              "MaxConcurrency": 10
+            },
+            "identifyTrafficJams": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:us-east-1:381492173799:function:identifyTrafficJams:$LATEST"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "MapDetectSeverity"
+            },
+            "MapDetectSeverity": {
+              "Type": "Map",
+              "InputPath": "$",
+              "ItemsPath": "$.trafficJamImages",
+              "ResultPath": "$.detectedSeveretyImages",
+              "Iterator": {
+                "StartAt": "detectSeverity",
+                "States": {
+                  "detectSeverity": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:lambda:us-east-1:381492173799:function:detectSeverity:$LATEST",
+                    "End": true
+                  }
+                }
+              },
+              "Next": "splitData"
+            },
+            "splitData": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:us-east-1:381492173799:function:splitData:$LATEST"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
           }
-        ],
-        "Next": "saveParkingValues"
+        }
+      ],
+      "Next": "saveTrafficValues"
+    },
+    "saveTrafficValues": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:us-east-1:381492173799:function:saveTrafficValues:$LATEST"
       },
-      "saveParkingValues": {
-        "Type": "Task",
-        "Resource": "arn:aws:states:::lambda:invoke",
-        "OutputPath": "$.Payload",
-        "Parameters": {
-          "Payload.$": "$",
-          "FunctionName": "arn:aws:lambda:us-east-1:018843574200:function:saveParkingValues:$LATEST"
-        },
-        "Retry": [
-          {
-            "ErrorEquals": [
-              "Lambda.ServiceException",
-              "Lambda.AWSLambdaException",
-              "Lambda.SdkClientException",
-              "Lambda.TooManyRequestsException"
-            ],
-            "IntervalSeconds": 1,
-            "MaxAttempts": 3,
-            "BackoffRate": 2
-          }
-        ],
-        "Next": "Success"
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "saveParkingValues"
+    },
+    "saveParkingValues": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:us-east-1:381492173799:function:saveParkingValues:$LATEST"
       },
-      "Success": {
-        "Type": "Succeed"
-      }
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
     }
   }
-  
+}
