@@ -3,6 +3,7 @@ import boto3
 import redis
 
 def lambda_handler(event, context):
+    # TODO implement
     bucket_name = event['bucketName']
     s3 = boto3.client('s3')
     
